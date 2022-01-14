@@ -1,17 +1,31 @@
+import argparse
 import logging
-from provider import check as course_check
-from provider import convert as json_convert
-from provider import get as course_get
-from arguments import get as arguments_get
+import asyncio
+from arguments import set_script_args
+from impl import Course
+from data import CurrencyData
 
-#logging.basicConfig(level=logging.INFO)
 
-print("Cource application started!")
+def set_debug(param):
+    if param in [1, 'true', 'True', 'y', 'Y']:
+        logging.basicConfig(level=logging.DEBUG)
 
-response_text = course_check()
-json_data = json_convert(response_text)
-course = course_get(['EUR', 'USD'], json_data)
-print(course)
 
-args = arguments_get()
-print(args)
+if __name__ == '__main__':
+    print("Cource application started!")
+    currency_list = ['USD', 'EUR', 'RUB']
+    currency_data = CurrencyData(currency_list)
+
+    parser = argparse.ArgumentParser(description="Currency course script")  # create app arg parser
+    set_script_args(parser, currency_list)  # set app arguments
+    args = parser.parse_args()  # parse arguments
+
+    args_dict = vars(args)  # convert arguments to dict
+    set_debug(args_dict['debug'])  # set debug status from arguments
+
+    currency_funds = {c: v for c, v in args_dict.items() if c in currency_list}  # get dict of currency funds
+    currency_data.set_funds(currency_funds)
+
+    course = Course(currency_data)
+    # testing of course requests
+    asyncio.get_event_loop().run_until_complete(course.provider(0.25))
