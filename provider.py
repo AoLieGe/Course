@@ -18,7 +18,9 @@ def check():
         logging.error(f'Course request error, http get status {r.status_code}')
 
 
-# TODO responce имеет встроенный конвертер json, можно использовать его
+# TODO responce имеет встроенный конвертер json, можно использовать его, но по документации на библиотеку
+# TODO метод request.json() должен бросать JSONDecodeError при ошибке преобразования, а контекстная подсказка
+# TODO не видит исключения с таким именем, поэтому использовал стандартный модуль json
 def convert(response):
     """convert text http-response to json-format"""
     try:
