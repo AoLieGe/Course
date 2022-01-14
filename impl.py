@@ -36,4 +36,4 @@ class Course(AbstractCourse):
                 self.data.is_data_changed = False
                 print(self.data.get_all())
             await asyncio.sleep(delay)
-        pass
+
