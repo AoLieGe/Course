@@ -23,9 +23,11 @@ if __name__ == '__main__':
     args_dict = vars(args)  # convert arguments to dict
     set_debug(args_dict['debug'])  # set debug status from arguments
 
-    currency_funds = {c: v for c, v in args_dict.items() if c in currency_list}  # get dict of currency funds
+    currency_funds = {c: f for c, f in args_dict.items() if c in currency_list}  # get dict of currency funds
     currency_data.set_funds(currency_funds)
 
     course = Course(currency_data)
+
     # testing of course requests
-    asyncio.get_event_loop().run_until_complete(course.provider(0.25))
+    asyncio.get_event_loop().run_until_complete(asyncio.gather(course.provider(6), course.informer(10)))
+
