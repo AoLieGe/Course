@@ -11,7 +11,6 @@ class Course(AbstractCourse):
         self.data = currency_data
         self.session = aiohttp.ClientSession()
         self.course_provider = CourseProvider(self.session)
-        self.is_state_changed = False
 
     async def listener(self):
         # method listen external requests from http port
@@ -26,9 +25,15 @@ class Course(AbstractCourse):
 
             logging.debug(json_data)
             actual_values = get_currency_values(self.data.course.keys(), json_data)
+            self.data.set_course(actual_values)
             print('Course received successfully')
-            await asyncio.sleep(60*delay)
+            await asyncio.sleep(delay)
 
     async def informer(self, delay):
         # method show current actual data in console
+        while True:
+            if self.data.is_data_changed:
+                self.data.is_data_changed = False
+                print(self.data.get_all())
+            await asyncio.sleep(delay)
         pass
