@@ -6,7 +6,7 @@ import logging
 from aiohttp import web
 from data.model import CurrencyData
 from data.provider import CourseProvider
-from abstract import AbstractServer
+from server.abstract import AbstractServer
 from data.misc import get_currency_values
 
 
@@ -78,24 +78,50 @@ class CourseServer(web.Application, AbstractServer):
 
     async def set_amount(self, request: web.Request) -> web.Response:
         """route method, set currency funds"""
-        data = await request.text()
-        logging.debug(f'Received request: /amount/set with data: {data}')
-        json_data = json.loads(data)
-        self.data.set_funds(json_data)
-        logging.debug(f'Sending response: Amount set success')
-        return web.Response(text="Amount set success", headers={'content-type': 'text/plain'}, status=200)
+        text = await request.text()
+        logging.debug(f"Received request: '/amount/set' with data: {text}")
+
+        data, *comment = text.split(' //')
+        try:
+            formatted_data = data.strip().replace("'", '"')
+            json_data = json.loads(formatted_data)
+            self.data.set_funds(json_data)
+            result = 'Amount set success'
+            logging.debug(f'Sending response: {result}')
+        except ValueError:
+            result = 'incorrect request format'
+            logging.error(f'Sending response: {result}')
+
+        return web.Response(text=result, headers={'content-type': 'text/plain'}, status=200)
+
 
     async def modify(self, request: web.Request) -> web.Response:
         """route method, modify currency funds"""
-        return web.Response(text="success", headers={'content-type': 'text/plain'}, status=200)
+        text = await request.text()
+        logging.debug(f"Received request: '/amount/set' with data: {text}")
+
+        data, *comment = text.split(' //')
+        try:
+            formatted_data = data.strip().replace("'", '"')
+            json_data = json.loads(formatted_data)
+            funds = self.data.funds
+            updated_data = {c.upper(): funds[c.upper()] + f for c, f in json_data.items()
+                            if c.upper() in funds.keys()}
+            self.data.set_funds(updated_data)
+            result = 'modify success'
+            logging.debug(f'Sending response: {result}')
+        except ValueError:
+            result = 'incorrect request format'
+            logging.error(f'Sending response: {result}')
+
+        return web.Response(text="Modify success", headers={'content-type': 'text/plain'}, status=200)
 
     async def get_currency(self, request: web.Request) -> web.Response:
         """route method, get currency course value"""
         currency = request.match_info.get('currency', '')
+        logging.debug(f'Received request: /{currency}/get')
         course = self.data.course[currency.upper()]
         response_text = f'{currency}: {course}'
-
-        logging.debug(f'Received request: /{currency}/get')
         logging.debug(f'Sending response: {response_text}')
         return web.Response(text=response_text, headers={'content-type': 'text/plain'})
 
@@ -121,4 +147,4 @@ class CourseServer(web.Application, AbstractServer):
             if self.data.is_data_changed:
                 self.data.is_data_changed = False
                 print(f'Message: Actual funds, course and funds sum data:\n{self.data.get_all()}\n')
-            await asyncio.sleep(5)
+            await asyncio.sleep(60)
