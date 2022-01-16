@@ -88,7 +88,7 @@ class CourseServer(web.Application, AbstractServer):
         text = await request.text()
         logging.debug(f"Received request: '/amount/set' with data: {text}")
 
-        data, *comment = text.split(' //')
+        data, *comment = text.split('//')
         try:
             formatted_data = data.strip().replace("'", '"')
             json_data = json.loads(formatted_data)
@@ -103,12 +103,13 @@ class CourseServer(web.Application, AbstractServer):
 
         return web.Response(text=result, headers={'content-type': 'text/plain'}, status=status)
 
+    # TODO почти полностью повторяет set_amount. Прочитать route и раскидать обработку данных в одном методе.
     async def modify(self, request: web.Request) -> web.Response:
         """route method, modify currency funds"""
         text = await request.text()
         logging.debug(f"Received request: '/amount/set' with data: {text}")
 
-        data, *comment = text.split(' //')
+        data, *comment = text.split('//')
         try:
             formatted_data = data.strip().replace("'", '"')
             json_data = json.loads(formatted_data)
