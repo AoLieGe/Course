@@ -21,13 +21,6 @@ class CurrencyData:
                 self.course[cur.upper()] = course
                 self.is_data_changed = True
 
-    def modify_funds(self, currency_funds: dict) -> None:
-        """modify values (add) funds for all currencies in currency_funds dict if it exist in self.funds"""
-        for cur, funds in currency_funds.items():
-            if cur.upper() in self.funds.keys() and self.funds[cur.upper()] != funds:
-                self.funds[cur.upper()] += funds
-                self.is_data_changed = True
-
     def get_all(self) -> str:
         """get info about all actual courses, funds and funds sum"""
         funds = '\n'.join([f'{cur}: {funds}' for cur, funds in self.funds.items()])
