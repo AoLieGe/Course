@@ -2,7 +2,7 @@ import json
 import logging
 
 
-class Provider:
+class CourseProvider:
     def __init__(self, session):
         self.session = session
         self._URL = 'https://www.cbr-xml-daily.ru/daily_json.js'
@@ -17,4 +17,3 @@ class Provider:
                     logging.exception('Json parsing error')
             else:
                 logging.error(f'Course request error, http get status {r.status}')
-
