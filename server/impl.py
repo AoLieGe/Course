@@ -113,7 +113,6 @@ class CourseServer(web.Application, AbstractServer):
     async def get_currency(self, request: web.Request) -> web.Response:
         """route method, get currency course value"""
         currency = request.match_info.get('currency', '')
-        print()
         logging.debug(f'Received request: /{currency}/get')
         course = self.data.course[currency.upper()]
         response_text = f'{currency}: {course}'
