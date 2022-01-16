@@ -14,6 +14,6 @@ class CourseProvider:
                 try:
                     return json.loads(await r.text())
                 except ValueError:
-                    logging.exception('Json parsing error')
+                    logging.exception('CourseProvider: Json parsing error')
             else:
-                logging.error(f'Course request error, http get status {r.status}')
+                logging.error(f'CourseProvider: request error, status={r.status}')
