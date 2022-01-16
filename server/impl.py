@@ -81,7 +81,7 @@ class CourseServer(web.Application, AbstractServer):
         logging.debug(f'Received request: /amount/get')
         data = self.data.get_all()
         logging.debug(f'Sending response: {data}')
-        return web.Response(text=data, headers={'content-type': 'text/plain'})
+        return web.Response(text=data, headers={'content-type': 'text/plain'}, status=200)
 
     async def set_amount(self, request: web.Request) -> web.Response:
         """route method, set currency funds"""
@@ -94,13 +94,14 @@ class CourseServer(web.Application, AbstractServer):
             json_data = json.loads(formatted_data)
             self.data.set_funds(json_data)
             result = 'Amount set success'
+            status = 200
             logging.debug(f'Sending response: {result}')
         except ValueError:
             result = 'incorrect request format'
+            status = 400
             logging.error(f'Sending response: {result}')
 
-        return web.Response(text=result, headers={'content-type': 'text/plain'}, status=200)
-
+        return web.Response(text=result, headers={'content-type': 'text/plain'}, status=status)
 
     async def modify(self, request: web.Request) -> web.Response:
         """route method, modify currency funds"""
@@ -116,12 +117,14 @@ class CourseServer(web.Application, AbstractServer):
                             if c.upper() in funds.keys()}
             self.data.set_funds(updated_data)
             result = 'modify success'
+            status = 200
             logging.debug(f'Sending response: {result}')
         except ValueError:
             result = 'incorrect request format'
+            status = 400
             logging.error(f'Sending response: {result}')
 
-        return web.Response(text="Modify success", headers={'content-type': 'text/plain'}, status=200)
+        return web.Response(text="Modify success", headers={'content-type': 'text/plain'}, status=status)
 
     async def get_currency(self, request: web.Request) -> web.Response:
         """route method, get currency course value"""
@@ -130,7 +133,7 @@ class CourseServer(web.Application, AbstractServer):
         course = self.data.course[currency.upper()]
         response_text = f'{currency}: {course}'
         logging.debug(f'Sending response: {response_text}')
-        return web.Response(text=response_text, headers={'content-type': 'text/plain'})
+        return web.Response(text=response_text, headers={'content-type': 'text/plain'}, status=200)
 
 # ===================client task methods===========================
     async def provide_course(self) -> None:
