@@ -1,3 +1,4 @@
+import sys
 import aiohttp
 import asyncio
 import contextlib
@@ -20,6 +21,12 @@ class CourseServer(web.Application, AbstractServer):
 
     def start(self, ip: str, port: int) -> None:
         """start server"""
+
+        # without this app get "RuntimeError: Event loop is closed" on exit (python 3.9 win 10 x64)
+        # solution from https://github.com/encode/httpx/issues/914
+        if sys.version_info[0] == 3 and sys.version_info[1] >= 8 and sys.platform.startswith('win'):
+            asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
         web.run_app(self, host=ip, port=port)
 
     def init_server(self) -> None:
