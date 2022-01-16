@@ -9,13 +9,8 @@ class AbstractServer(ABC):
         pass
 
     @abstractmethod
-    async def set_amount(self, request: web.Request) -> web.Response:
-        """route method - set currency funds"""
-        pass
-
-    @abstractmethod
-    async def modify(self, request: web.Request) -> web.Response:
-        """route method - modify currency funds"""
+    async def set_modify(self, request: web.Request) -> web.Response:
+        """route method - set/modify currency funds"""
         pass
 
     @abstractmethod

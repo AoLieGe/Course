@@ -35,13 +35,13 @@ class CourseServer(web.Application, AbstractServer):
         self.cleanup_ctx.append(self.client_session)
         self.queue_tasks()
 
-# ===================initialisation methods===========================
+    # ===================initialisation methods===========================
     def init_routes(self) -> None:
         """set all required routes for server"""
         routes = [
             web.get('/amount/get', self.get_amount),
-            web.post('/amount/set', self.set_amount),
-            web.post('/modify', self.modify),
+            web.post('/amount/set', self.set_modify),
+            web.post('/modify', self.set_modify),
             web.get('/{currency}/get', self.get_currency),
         ]
 
@@ -58,7 +58,7 @@ class CourseServer(web.Application, AbstractServer):
         yield
         await session.close()
 
-# ===================client task starters===========================
+    # ===================client task starters===========================
     async def provide_task(self, app: web.Application) -> None:
         """run long-lived task, used to start in app.cleanup_ctx"""
         task = asyncio.create_task(self.provide_course())
@@ -75,7 +75,7 @@ class CourseServer(web.Application, AbstractServer):
         with contextlib.suppress(asyncio.CancelledError):
             await task
 
-# ===================server route methods===========================
+    # ===================server route methods===========================
     async def get_amount(self, request: web.Request) -> web.Response:
         """route method, response with all course data"""
         logging.debug(f'Received request: /amount/get')
@@ -83,60 +83,44 @@ class CourseServer(web.Application, AbstractServer):
         logging.debug(f'Sending response: {data}')
         return web.Response(text=data, headers={'content-type': 'text/plain'}, status=200)
 
-    async def set_amount(self, request: web.Request) -> web.Response:
-        """route method, set currency funds"""
+    async def set_modify(self, request: web.Request) -> web.Response:
+        """route method, set/modify currency funds"""
         text = await request.text()
-        logging.debug(f"Received request: '/amount/set' with data: {text}")
+        rel_url = str(request.rel_url)
+        logging.debug(f"Received request: '{rel_url}' with data: {text}")
 
         data, *comment = text.split('//')
         try:
             formatted_data = data.strip().replace("'", '"')
             json_data = json.loads(formatted_data)
+
+            if 'modify'.lower() in rel_url.lower():
+                funds = self.data.funds
+                json_data = {c.upper(): funds[c.upper()] + f for c, f in json_data.items()
+                             if c.upper() in funds.keys()}
+
             self.data.set_funds(json_data)
-            result = 'Amount set success'
+            result = 'Funds set success'
             status = 200
             logging.debug(f'Sending response: {result}')
         except ValueError:
             result = 'incorrect request format'
             status = 400
-            logging.error(f'Sending response: {result}')
+            logging.exception(f'Exception: {result}')
 
         return web.Response(text=result, headers={'content-type': 'text/plain'}, status=status)
-
-    # TODO почти полностью повторяет set_amount. Прочитать route и раскидать обработку данных в одном методе.
-    async def modify(self, request: web.Request) -> web.Response:
-        """route method, modify currency funds"""
-        text = await request.text()
-        logging.debug(f"Received request: '/amount/set' with data: {text}")
-
-        data, *comment = text.split('//')
-        try:
-            formatted_data = data.strip().replace("'", '"')
-            json_data = json.loads(formatted_data)
-            funds = self.data.funds
-            updated_data = {c.upper(): funds[c.upper()] + f for c, f in json_data.items()
-                            if c.upper() in funds.keys()}
-            self.data.set_funds(updated_data)
-            result = 'modify success'
-            status = 200
-            logging.debug(f'Sending response: {result}')
-        except ValueError:
-            result = 'incorrect request format'
-            status = 400
-            logging.error(f'Sending response: {result}')
-
-        return web.Response(text="Modify success", headers={'content-type': 'text/plain'}, status=status)
 
     async def get_currency(self, request: web.Request) -> web.Response:
         """route method, get currency course value"""
         currency = request.match_info.get('currency', '')
+        print()
         logging.debug(f'Received request: /{currency}/get')
         course = self.data.course[currency.upper()]
         response_text = f'{currency}: {course}'
         logging.debug(f'Sending response: {response_text}')
         return web.Response(text=response_text, headers={'content-type': 'text/plain'}, status=200)
 
-# ===================client task methods===========================
+    # ===================client task methods===========================
     async def provide_course(self) -> None:
         """get json data from external URL and save it"""
         provider = CourseProvider(self['client_session'])
@@ -148,6 +132,9 @@ class CourseServer(web.Application, AbstractServer):
 
             logging.debug(json_data)
             actual_values = get_currency_values(self.data.course.keys(), json_data)
+            if not actual_values:
+                continue
+
             self.data.set_course(actual_values)
             print('Message: Course received successfully')
             await asyncio.sleep(60 * self.PROVIDE_DELAY)  # !!!! convert delay to seconds
