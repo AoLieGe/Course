@@ -4,10 +4,10 @@ import contextlib
 import json
 import logging
 from aiohttp import web
-from model import CurrencyData
-from provider import CourseProvider
+from data.model import CurrencyData
+from data.provider import CourseProvider
 from abstract import AbstractServer
-from misc import get_currency_values
+from data.misc import get_currency_values
 
 
 class CourseServer(web.Application, AbstractServer):

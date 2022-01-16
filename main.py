@@ -1,7 +1,7 @@
-from arguments import AppArguments
-from debug import set_debug_level
-from model import CurrencyData
-from impl import CourseServer
+from app.arguments import AppArguments
+from app.debug import set_debug_level
+from data.model import CurrencyData
+from server.impl import CourseServer
 
 
 if __name__ == '__main__':
