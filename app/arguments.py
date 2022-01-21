@@ -8,7 +8,8 @@ class AppArguments:
 
     def read(self) -> dict:
         """return dict with command line arguments and values"""
-        return vars(self.parser.parse_args())
+        args = vars(self.parser.parse_args())
+        return {arg: val for arg, val in args.items() if val is not None}
 
     def _set_script_args(self, currencies: list) -> None:
         """set application arguments
@@ -24,4 +25,4 @@ class AppArguments:
 
         currencies_set = set(currencies)
         for cur in currencies_set:
-            self.parser.add_argument(f'-{cur}', dest=f"{cur}", type=float)
+            self.parser.add_argument(f'-{cur}', dest=f"{cur}", type=float, help=f'Funds for {cur} currency')
